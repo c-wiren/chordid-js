@@ -1,16 +1,20 @@
 const noteNames = ["C", "C♯", "D", "E♭", "E", "F", "F♯", "G", "G♯", "A", "B♭", "B"];
 
+enum ChordType {
+  Major,
+  Minor,
+  Sus2,
+  Sus4,
+  No3,
+  Dim,
+  Aug,
+  _5
+}
+
 export class Chord {
   Root: number;
   HasRoot: boolean;
-  Major: boolean;
-  Minor: boolean;
-  sus2: boolean;
-  sus4: boolean;
-  no3: boolean;
-  dim: boolean;
-  aug: boolean;
-  _5: boolean;
+  Type: ChordType;
   _6: boolean;
   _7: boolean;
   Maj7: boolean;
@@ -26,14 +30,7 @@ export class Chord {
   constructor(root: number) {
     this.Root = root;
     this.HasRoot = false;
-    this.Major = false;
-    this.Minor = false;
-    this.sus2 = false;
-    this.sus4 = false;
-    this.no3 = false;
-    this.dim = false;
-    this.aug = false;
-    this._5 = false;
+    this.Type = ChordType.Major;
     this._6 = false;
     this._7 = false;
     this.Maj7 = false;
@@ -49,16 +46,13 @@ export class Chord {
   toString() {
     let text = "";
     text += noteNames[this.Root];
-    if (this.dim)
-      text += "dim";
-    else if (this.aug)
-      text += "aug";
-    else if (this.Minor)
-      text += "m";
-    else if (this._5)
-      text += "5";
-    else if (this.no3)
-      text += "no3";
+    switch (this.Type) {
+      case ChordType.Dim: text += "dim"; break;
+      case ChordType.Aug: text += "aug"; break;
+      case ChordType.Minor: text += "m"; break;
+      case ChordType._5: text += "5"; break;
+      case ChordType.No3: text += "no3"; break;
+    }
 
     let type = "";
     if (this._6) {
@@ -104,8 +98,10 @@ export class Chord {
       text += " " + type;
     }
 
-    if (this.sus2) text += " sus2";
-    if (this.sus4) text += " sus4";
+    switch (this.Type) {
+      case ChordType.Sus2: text += " sus2"; break;
+      case ChordType.Sus4: text += " sus4"; break;
+    }
 
     return text;
   }
@@ -113,20 +109,20 @@ export class Chord {
     let chord = new Chord(root);
     if (rawChord[0]) chord.HasRoot = true;
     if (rawChord[4]) {
-      chord.Major = true;
+      chord.Type = ChordType.Major;
     } else if (rawChord[3]) {
-      chord.Minor = true;
+      chord.Type = ChordType.Minor;
     } else {
       if (rawChord[7]) {
         if (rawChord[5]) {
-          chord.sus4 = true;
+          chord.Type = ChordType.Sus4;
         } else if (rawChord[2]) {
-          chord.sus2 = true;
+          chord.Type = ChordType.Sus2;
         } else {
-          chord._5 = true;
+          chord.Type = ChordType._5;
         }
       } else {
-        chord.no3 = true;
+        chord.Type = ChordType.No3;
       }
     }
 
@@ -134,25 +130,27 @@ export class Chord {
     if (rawChord[11]) chord.Maj7 = true;
 
     if (rawChord[1]) chord.b9 = true;
-    if (rawChord[2] && !chord.sus2) chord._9 = true;
-    if (rawChord[3] && chord.Major) chord.s9 = true;
-    if (rawChord[5] && !chord.sus4) chord._11 = true;
+    if (rawChord[2] && chord.Type != ChordType.Sus2) chord._9 = true;
+    if (rawChord[3] && chord.Type == ChordType.Major) chord.s9 = true;
+    if (rawChord[5] && chord.Type != ChordType.Sus4) chord._11 = true;
     if (rawChord[6]) {
-      if (chord.Minor && !rawChord[7]) {
-        chord.dim = true;
+      if (chord.Type == ChordType.Minor && !rawChord[7] && !chord._7) {
+        chord.Type = ChordType.Dim;
       } else {
         chord.s11 = true;
       }
     }
     if (rawChord[8]) {
-      if (chord.Major && !rawChord[7]) {
-        chord.aug = true;
+      if (chord.Type == ChordType.Major && !rawChord[7]) {
+        chord.Type = ChordType.Aug;
       } else {
         chord.b13 = true;
       }
     }
     if (rawChord[9]) {
-      if (chord._7 || chord.Maj7) {
+      if (chord.Type == ChordType.Dim) {
+        chord._7 = true;
+      } else if (chord._7 || chord.Maj7) {
         chord._13 = true;
       } else {
         chord._6 = true;
@@ -167,7 +165,7 @@ export class Chord {
   static calculateProbability(chord: Chord) {
     let score = 0;
     if (chord.HasRoot) score += 1;
-    if (chord.HasRoot || !chord.no3) score += 10;
+    if (chord.HasRoot || chord.Type != ChordType.No3) score += 10;
     score -= Number(chord._7);
     score -= 2 * Number(chord.Maj7) + Number(chord._6);
     score -= 3 * (Number(chord._9) + Number(chord._11) + Number(chord._13));

@@ -14,4 +14,5 @@ describe('Test score', function () {
     it("Am7", () => { assert.equal(convert(["G2", "A2", "C3", "E3"]), "Am 7"); });
     it("Am7", () => { assert.equal(convert(["C3", "E3", "G3", "A3"]), "C 6"); });
     it("Am", () => { assert.equal(convert(["C3", "E3", "A3"]), "Am"); });
+    it("Cdim7", () => { assert.equal(convert(["C3", "Eb3", "F#3", "A3"]), "Cdim 7"); });
 });
