@@ -2,18 +2,21 @@ import * as chordId from "../src/chordid";
 import assert from "assert";
 import "mocha";
 
-
-function convert(strings) {
+function testPrintAndScore(strings: string[], key: string, equals: string) {
     let notes = strings.map(x => chordId.noteNumberFromString(x));
-    return chordId.convertNotesToChords(notes)[0].toString();
+    let chordInKey = chordId.convertNotesToChordInKey(notes, chordId.noteNumberFromString(key));
+    let chordWithHighestScore = chordId.convertNotesToChords(notes)[0];
+
+    it("chord detection for " + equals, () => { assert.equal(chordInKey.toString(), equals); });
+    it("chord scoring for " + equals, () => { assert.equal(chordWithHighestScore.toString(), equals); });
 }
 
-describe('Test score', function () {
-    it("C713", () => { assert.equal(convert(["Bb2", "E3", "A3"]), "C 7/13"); });
-    it("Gmaj7", () => { assert.equal(convert(["F#2", "G2", "B2", "D3"]), "G maj7"); });
-    it("Am7", () => { assert.equal(convert(["G2", "A2", "C3", "E3"]), "Am 7"); });
-    it("Am7", () => { assert.equal(convert(["C3", "E3", "G3", "A3"]), "C 6"); });
-    it("Am", () => { assert.equal(convert(["C3", "E3", "A3"]), "Am"); });
-    it("Cdim7", () => { assert.equal(convert(["C3", "Eb3", "F#3", "A3"]), "Cdim 7"); });
-    it("Cb5", () => { assert.equal(convert(["C3", "E3", "F#3"]), "C ♭5"); });
+describe('Testing detection and scoring of chords', function () {
+    testPrintAndScore(["Bb2", "E3", "A3"], "C", "C 7/13");
+    testPrintAndScore(["F#2", "G2", "B2", "D3"], "G", "G maj7");
+    testPrintAndScore(["G2", "A2", "C3", "E3"], "A", "Am 7");
+    testPrintAndScore(["C3", "E3", "G3", "A3"], "C", "C 6");
+    testPrintAndScore(["C3", "E3", "A3"], "A", "Am");
+    testPrintAndScore(["C3", "Eb3", "F#3", "A3"], "C", "Cdim 7");
+    testPrintAndScore(["C3", "E3", "F#3"], "C", "C ♭5");
 });

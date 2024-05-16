@@ -184,7 +184,7 @@ export class Chord {
   }
 }
 
-export function noteNumberFromString(string: string) {
+export function noteNumberFromString(string: string): number {
   if (string.length < 1) throw "Invalid note";
   let note;
   switch (string[0]) {
@@ -222,7 +222,7 @@ export function noteNumberFromString(string: string) {
     else
       break;
   }
-  note += 12 * (1 + parseInt(string.substr(i)));
+  note += 12 * (1 + parseInt(string.substring(i))) || 0;
   return note;
 }
 
@@ -245,4 +245,12 @@ export function convertNotesToChords(notes: number[]) {
   chords.sort((a, b) => b.Score - a.Score);
 
   return chords;
+}
+
+export function convertNotesToChordInKey(notes: number[], key: number) {
+  let rawChord = convertNotesToRawChord(notes);
+  for (let i = 0; i < key; i++) {
+    rawChord.push(rawChord.shift());
+  }
+  return Chord.fromRawChord(rawChord, key);
 }
