@@ -25,6 +25,7 @@ export class Chord {
   s9: boolean;
   s11: boolean;
   b13: boolean;
+  b5: boolean;
   Score: number;
 
   constructor(root: number) {
@@ -41,6 +42,7 @@ export class Chord {
     this.s9 = false;
     this.s11 = false;
     this.b13 = false;
+    this.b5 = false;
   }
 
   toString() {
@@ -94,6 +96,10 @@ export class Chord {
       if (type.length) type += "/";
       type += "13";
     }
+    if (this.b5) {
+      if (type.length) type += "/";
+      type += "♭5";
+    }
     if (type.length) {
       text += " " + type;
     }
@@ -137,7 +143,11 @@ export class Chord {
       if (chord.Type == ChordType.Minor && !rawChord[7] && !chord._7) {
         chord.Type = ChordType.Dim;
       } else {
-        chord.s11 = true;
+        if (rawChord[7]) {
+          chord.s11 = true;
+        } else {
+          chord.b5 = true;
+        }
       }
     }
     if (rawChord[8]) {
@@ -169,7 +179,7 @@ export class Chord {
     score -= Number(chord._7);
     score -= 2 * Number(chord.Maj7) + Number(chord._6);
     score -= 3 * (Number(chord._9) + Number(chord._11) + Number(chord._13));
-    score -= 4 * (Number(chord.b9) + Number(chord.s9) + Number(chord.s11) + Number(chord.b13));
+    score -= 4 * (Number(chord.b9) + Number(chord.s9) + Number(chord.s11) + Number(chord.b13) + Number(chord.b5));
     return score;
   }
 }
