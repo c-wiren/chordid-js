@@ -11,6 +11,11 @@ enum ChordType {
   _5
 }
 
+type ChordParams = {
+  Notes: number[],
+  Bottom: number;
+};
+
 export class Chord {
   Root: number;
   HasRoot: boolean;
@@ -111,7 +116,8 @@ export class Chord {
 
     return text;
   }
-  static fromRawChord(rawChord: number[], root: number) {
+  static fromRawChord(chordParams: ChordParams, root: number) {
+    const rawChord = chordParams.Notes;
     let chord = new Chord(root);
     if (rawChord[0]) chord.HasRoot = true;
     if (rawChord[4]) {
@@ -167,17 +173,30 @@ export class Chord {
       }
     }
 
-    chord.Score = this.calculateProbability(chord);
+    chord.Score = this.calculateScore(chord, chordParams);
 
     return chord;
   }
 
-  static calculateProbability(chord: Chord) {
-    let score = 0;
+  static calculateScore(chord: Chord, chordParams: ChordParams) {
+    let score = 100;
     if (chord.HasRoot) score += 1;
     if (chord.HasRoot || chord.Type != ChordType.No3) score += 10;
+    if (chord.Root == chordParams.Bottom) score += 1.1;
+    switch (chord.Type) {
+      case ChordType.Aug:
+      case ChordType.Dim:
+      case ChordType.Sus2:
+      case ChordType.Sus4:
+        score -= 1;
+        break;
+      case ChordType.No3:
+      case ChordType._5:
+        score -= 2;
+        break;
+    }
     score -= Number(chord._7);
-    score -= 2 * Number(chord.Maj7) + Number(chord._6);
+    score -= 2 * (Number(chord.Maj7) + Number(chord._6));
     score -= 3 * (Number(chord._9) + Number(chord._11) + Number(chord._13));
     score -= 4 * (Number(chord.b9) + Number(chord.s9) + Number(chord.s11) + Number(chord.b13) + Number(chord.b5));
     return score;
@@ -236,10 +255,11 @@ function convertNotesToRawChord(notes: number[]) {
 
 export function convertNotesToChords(notes: number[]) {
   let rawChord = convertNotesToRawChord(notes);
+  let chordParams: ChordParams = { Notes: rawChord, Bottom: notes[0] % 12 };
   let chords: Chord[] = [];
   for (let i = 0; i < 12; i++) {
-    chords.push(Chord.fromRawChord(rawChord, i));
-    rawChord.push(rawChord.shift());
+    chords.push(Chord.fromRawChord(chordParams, i));
+    chordParams.Notes.push(chordParams.Notes.shift());
   }
 
   chords.sort((a, b) => b.Score - a.Score);
@@ -249,8 +269,9 @@ export function convertNotesToChords(notes: number[]) {
 
 export function convertNotesToChordInKey(notes: number[], key: number) {
   let rawChord = convertNotesToRawChord(notes);
+  let chordParams: ChordParams = { Notes: rawChord, Bottom: notes[0] % 12 };
   for (let i = 0; i < key; i++) {
-    rawChord.push(rawChord.shift());
+    chordParams.Notes.push(chordParams.Notes.shift());
   }
-  return Chord.fromRawChord(rawChord, key);
+  return Chord.fromRawChord(chordParams, key);
 }

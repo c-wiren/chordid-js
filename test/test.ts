@@ -6,7 +6,7 @@ function testPrintAndScore(strings: string[], key: string, equals: string) {
     let notes = strings.map(x => chordId.noteNumberFromString(x));
     let chordInKey = chordId.convertNotesToChordInKey(notes, chordId.noteNumberFromString(key));
     let chordWithHighestScore = chordId.convertNotesToChords(notes)[0];
-
+    console.log(chordInKey.toString() + ": " + chordInKey.Score + ", " + chordWithHighestScore.toString() + ": " + chordWithHighestScore.Score);
     it("chord detection for " + equals, () => { assert.equal(chordInKey.toString(), equals); });
     it("chord scoring for " + equals, () => { assert.equal(chordWithHighestScore.toString(), equals); });
 }
